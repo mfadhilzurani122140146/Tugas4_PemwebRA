@@ -1,37 +1,61 @@
-/* result.php */
 <?php
 session_start();
-if (!isset($_SESSION['name'])) {
-    echo "No data available.";
+if (!isset($_SESSION['form_data'])) {
+    header("Location: form.php");
     exit();
 }
+
+$data = $_SESSION['form_data'];
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>Hasil Pendaftaran</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Result</title>
 </head>
 <body>
-    <h2>Submitted Data</h2>
-    <table border="1">
-        <tr><th>Name</th><td><?php echo htmlspecialchars($_SESSION['name']); ?></td></tr>
-        <tr><th>Email</th><td><?php echo htmlspecialchars($_SESSION['email']); ?></td></tr>
-        <tr><th>Age</th><td><?php echo htmlspecialchars($_SESSION['age']); ?></td></tr>
-        <tr><th>Biography</th><td><?php echo htmlspecialchars($_SESSION['bio']); ?></td></tr>
-        <tr><th>Browser/OS Info</th><td><?php echo htmlspecialchars($_SESSION['userAgent']); ?></td></tr>
-    </table>
+    <div class="container">
+        <h2>Data Pendaftaran</h2>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>Nama</td>
+                <td><?php echo htmlspecialchars($data['nama']); ?></td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td><?php echo htmlspecialchars($data['email']); ?></td>
+            </tr>
+            <tr>
+                <td>Umur</td>
+                <td><?php echo htmlspecialchars($data['umur']); ?></td>
+            </tr>
+            <tr>
+                <td>Telepon</td>
+                <td><?php echo htmlspecialchars($data['telepon']); ?></td>
+            </tr>
+            <tr>
+                <td>Browser</td>
+                <td><?php echo htmlspecialchars($data['browser']); ?></td>
+            </tr>
+            <tr>
+                <td>Operating System</td>
+                <td><?php echo htmlspecialchars($data['os']); ?></td>
+            </tr>
+        </table>
 
-    <h2>File Content</h2>
-    <table border="1">
-        <tr><th>Line Number</th><th>Content</th></tr>
-        <?php
-        foreach ($_SESSION['fileContent'] as $index => $line) {
-            echo "<tr><td>" . ($index + 1) . "</td><td>" . htmlspecialchars($line) . "</td></tr>";
-        }
-        ?>
-    </table>
+        <h3>Isi File:</h3>
+        <pre><?php echo htmlspecialchars($data['file_content']); ?></pre>
+    </div>
 </body>
 </html>
+
+<?php
+// Bersihkan session setelah ditampilkan
+unset($_SESSION['form_data']);
+?>

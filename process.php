@@ -1,58 +1,83 @@
-/* process.php */
 <?php
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $age = trim($_POST['age']);
-    $bio = trim($_POST['bio']);
-    $file = $_FILES['file'];
-
-    // Validation
-    $errors = [];
-    if (strlen($name) < 3) {
-        $errors[] = "Name must be at least 3 characters long.";
-    }
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "Invalid email format.";
-    }
-    if ($age <= 0 || $age > 150) {
-        $errors[] = "Age must be between 1 and 150.";
-    }
-    if (strlen($bio) < 10) {
-        $errors[] = "Biography must be at least 10 characters long.";
-    }
-    if ($file['size'] > 1024 * 1024) {
-        $errors[] = "File size must be less than 1MB.";
-    }
-    if ($file['type'] !== "text/plain") {
-        $errors[] = "Only .txt files are allowed.";
+    function sanitizeInput($data) {
+        $data = trim($data);
+        $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        $data = strip_tags($data);
+        return $data;
     }
 
-    // Process file content
-    if (empty($errors)) {
-        $fileContent = file_get_contents($file['tmp_name']);
-        $lines = explode(PHP_EOL, $fileContent);
+    $nama = sanitizeInput($_POST['nama']);
+    $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+    $umur = filter_input(INPUT_POST, 'umur', FILTER_VALIDATE_INT);
+    $telepon = sanitizeInput($_POST['telepon']);
+
+    if (!$nama || strlen($nama) < 3) {
+        die("Nama tidak valid! Minimal 3 karakter.");
+    }
+
+    if (!$email) {
+        die("Email tidak valid!");
+    }
+
+    if (!$umur || $umur < 17 || $umur > 100) {
+        die("Umur tidak valid! Harus antara 17-100 tahun.");
+    }
+
+    if (!$telepon || strlen($telepon) < 10 || strlen($telepon) > 13) {
+        die("Nomor telepon tidak valid! Harus antara 10-13 digit.");
+    }
+
+    $fileContent = '';
+    if (isset($_FILES['dataFile'])) {
+        $file = $_FILES['dataFile'];
+        
+        if ($file['size'] > 1024 * 1024) {
+            die("Ukuran file terlalu besar! Maksimal 1MB.");
+        }
+
+        if ($file['type'] !== 'text/plain') {
+            die("Tipe file harus text (.txt)!");
+        }
+
+        $fileContent = sanitizeInput(file_get_contents($file['tmp_name']));
     }
 
     $userAgent = $_SERVER['HTTP_USER_AGENT'];
+    $browser = get_browser_name($userAgent);
+    $os = get_os_name($userAgent);
 
-    if (!empty($errors)) {
-        echo "<h3>Errors:</h3><ul>";
-        foreach ($errors as $error) {
-            echo "<li>$error</li>";
-        }
-        echo "</ul>";
-    } else {
-        session_start();
-        $_SESSION['name'] = $name;
-        $_SESSION['email'] = $email;
-        $_SESSION['age'] = $age;
-        $_SESSION['bio'] = $bio;
-        $_SESSION['fileContent'] = $lines;
-        $_SESSION['userAgent'] = $userAgent;
+    session_start();
+    $_SESSION['form_data'] = [
+        'nama' => $nama,
+        'email' => $email,
+        'umur' => $umur,
+        'telepon' => $telepon,
+        'file_content' => $fileContent,
+        'browser' => $browser,
+        'os' => $os,
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
 
-        header("Location: result.php");
-        exit();
-    }
+    header("Location: result.php");
+    exit();
+}
+
+function get_browser_name($userAgent) {
+    if (strpos($userAgent, 'Firefox')) return 'Firefox';
+    if (strpos($userAgent, 'Chrome')) return 'Chrome';
+    if (strpos($userAgent, 'Safari')) return 'Safari';
+    if (strpos($userAgent, 'Edge')) return 'Edge';
+    if (strpos($userAgent, 'Opera') || strpos($userAgent, 'OPR/')) return 'Opera';
+    return 'Browser tidak dikenal';
+}
+
+function get_os_name($userAgent) {
+    if (strpos($userAgent, 'Windows')) return 'Windows';
+    if (strpos($userAgent, 'Mac')) return 'MacOS';
+    if (strpos($userAgent, 'Linux')) return 'Linux';
+    if (strpos($userAgent, 'Android')) return 'Android';
+    if (strpos($userAgent, 'iOS')) return 'iOS';
+    return 'OS tidak dikenal';
 }
 ?>
